@@ -292,6 +292,60 @@ ionic.views.Scroll = ionic.views.View.inherit({
     this.__container = options.el;
     this.__content = options.el.firstElementChild;
 
+    /* Android 2.2: no deviceorientation event */
+
+    ionic.on('tap', onTap, window);
+    function onTap(e) {
+      if (e.srcElement.tagName.match(/input|textarea/i)) {
+        setTimeout(makeSureInputVisible, 150);
+      }
+    }
+
+    var initHeight = window.innerHeight;
+    function keyboardHeight() {
+      return initHeight - window.innerHeight;
+    }
+    function makeSureInputVisible() {
+      self.resize();
+      var el = document.activeElement;
+      
+      console.log('keyboardHeight', keyboardHeight());
+      if (!keyboardHeight() || !el) {
+        console.log('aborting inputVisible, no keyboard/el');
+        return;
+      } 
+      setTimeout(function() {
+        var kbHeight = keyboardHeight();
+
+        var elementViewportPosition = el.getBoundingClientRect().top;
+        var elIsVisible = (elementViewportPosition < window.innerHeight);
+
+        console.log('elementViewportPosition', elementViewportPosition);
+        console.log('window.innerHeight', window.innerHeight);
+        console.log('elIsVisible?', elIsVisible);
+
+        if (!elIsVisible) {
+          console.log(kbHeight);
+          self.scrollBy(0, kbHeight, true);
+        }
+      }, 0);
+    }
+
+    var diff = 0;
+    var keyboard = false;
+    //ionic.on('resize', onKeyboard, window);
+    ionic.on('keyup', onKeyboard, window);
+    function onKeyboard() {
+      setTimeout(function() {
+        // window.scrollTo(0, 0);
+        if (window.innerHeight < initHeight) {
+          diff = initHeight - window.innerHeight;
+          self.scrollBy(null, diff, false);
+        } else {
+          self.scrollBy(null, -diff, false);
+        }
+      }, 0);
+    }
 
 		this.options = {
 
